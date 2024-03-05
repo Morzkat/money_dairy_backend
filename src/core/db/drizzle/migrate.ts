@@ -8,17 +8,18 @@ dotenv.config();
 const sql = postgres(process.env.DATABASE_URL, { max: 1 });
 const db = drizzle(sql);
 
-const runMigration = async () => {
+const migration = async () => {
     try {
         await migrate(db, {
             migrationsFolder: "src/core/db/drizzle/migrations",
         });
 
         console.log("Migration successful");
+        process.exit(0);
     } catch (error) {
         console.error('error: ', error);
         process.exit(1);
     }
 };
 
-runMigration();
+migration();
