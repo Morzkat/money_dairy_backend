@@ -1,17 +1,16 @@
 export enum Status {
-    Paid = 'Paid'
+    Paid = 'Paid',
 }
 
 export enum Category {
-    Grocery = 'Grocery'
+    Grocery = 'Grocery',
 }
 
-
-//TODO: Create a smaller type with only amount and 
+//TODO: Create a smaller type with only amount and
 export type Transaction = {
-    id: string,
-    amount: number,
-    date: string,
-    status: Status,
-    category: Category
-}
+    id: string;
+    amount: number;
+    date: string;
+    status: Status;
+    category: Category;
+};
