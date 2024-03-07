@@ -11,4 +11,15 @@ export class WalletsRepository extends GenericRepository<Wallet, Wallet> {
     constructor(@Inject(PG_CONNECTION) protected readonly db: PostgresJsDatabase<typeof schemas>) {
         super(db, 'wallets');
     }
+
+    async existsWalletWithName(name: string): Promise<boolean> {
+        const wallet = await this.db.query.wallets.findFirst({
+            where: (wallet, { eq }) => eq(wallet.name, name)
+        });
+
+        if (wallet === null || wallet === undefined)
+            return false;
+
+        return true;
+    }
 }
