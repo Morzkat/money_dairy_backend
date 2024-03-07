@@ -1,46 +1,33 @@
 import { BaseEntity } from './base.entity.type';
-import { nameOf } from './../shared/object.utils';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { IGenericRepository } from 'src/core/db/unitOfWork/repository.base';
 
 @Injectable()
 export abstract class BaseEntityService<T extends BaseEntity> {
-    entities: Array<T>;
 
-    constructor() {
-        this.entities = new Array<T>();
+    constructor(private baseRepository: IGenericRepository<T, T>) {
     }
 
-    //TODO: this method should recieve a date range because we do not want to return all entity history...
     getAll() {
-        return this.entities;
+        return this.baseRepository.getAll();
     }
 
-    getById(id: string) {
-        const entity = this.entities.find((x) => x.id === id);
-        if (entity) {
-            return entity;
-        }
+    getById(id: number) {
+        if (!this.baseRepository.exists(id))
+            throw new NotFoundException(`Wallet with id: ${id} not found.`);
 
-        console.log(`${nameOf(entity)} with id: ${id} not found.`);
-        throw new NotFoundException(`${typeof entity} with id: ${id} not found.`);
+        return this.baseRepository.get(id);
     }
 
     create(entity: T) {
-        entity.id = new Date().toISOString();
-        this.entities.push(entity);
-
-        return entity;
+        return this.baseRepository.create(entity);
     }
 
-    update(updatedEntity: T) {
-        const entity = this.getById(updatedEntity.id);
-        Object.assign(entity, updatedEntity);
-
-        this.entities = this.entities.map((x) => (x.id === x.id ? entity : x));
-        return entity;
+    update(id: number, updatedEntity: T) {
+        this.baseRepository.update(id, updatedEntity);
     }
 
-    delete(id: string) {
-        this.entities = this.entities.filter((x) => x.id !== id);
+    delete(id: number) {
+        this.baseRepository.delete(id);
     }
 }

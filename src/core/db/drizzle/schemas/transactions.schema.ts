@@ -8,6 +8,7 @@ import {
     text,
     timestamp,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 export const transactionStatus = pgTable('transaction_status', {
     id: serial('id').primaryKey(),
@@ -34,3 +35,9 @@ export const transactions = pgTable('transactions', {
     createAt: timestamp('create_at').notNull().defaultNow(),
     modifyAt: timestamp('modify_at').notNull().defaultNow(),
 });
+
+export const transactionsRelations = relations(transactions, ({ one, many }) => ({
+	wallet: one(wallets, { fields: [transactions.wallet], references: [wallets.id] }),
+	category: one(categories, { fields: [transactions.category], references: [categories.id] }),
+	status: one(transactionStatus, { fields: [transactions.status], references: [transactionStatus.id] }),
+}));
