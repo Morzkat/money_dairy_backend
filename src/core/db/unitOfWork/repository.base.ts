@@ -46,7 +46,7 @@ export class GenericRepository<T, X extends BaseEntity> extends IGenericReposito
     }
 
     async update(id: number, entity: T) {
-        if (!this.exists(id))
+        if (!(await this.exists(id)))
             throw new Error('Entity not found.');
 
         await this.db.update(schemas[this.schema])
@@ -55,7 +55,7 @@ export class GenericRepository<T, X extends BaseEntity> extends IGenericReposito
     }
 
     async delete(id: number) {
-        if (!this.exists(id))
+        if (!(await this.exists(id)))
             throw new Error('Entity not found.');
 
         await this.db.delete(schemas[this.schema])

@@ -12,8 +12,8 @@ export abstract class BaseEntityService<T extends BaseEntity> {
         return this.baseRepository.getAll();
     }
 
-    getById(id: number) {
-        if (!this.baseRepository.exists(id))
+    async getById(id: number) {
+        if (!(await this.baseRepository.exists(id)))
             throw new NotFoundException(`Wallet with id: ${id} not found.`);
 
         return this.baseRepository.get(id);
