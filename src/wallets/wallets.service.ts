@@ -11,7 +11,7 @@ export class WalletsService extends BaseEntityService<Wallet> {
   }
 
   async getById(id: number) {
-    if (!this.walletsRepository.exists(id))
+    if (!(await this.walletsRepository.exists(id)))
       throw new NotFoundException(`Wallet with id: ${id} not found.`);
 
     return this.walletsRepository.get(id);
