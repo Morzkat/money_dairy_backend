@@ -3,7 +3,6 @@ import { Transaction, Status, Category } from './transaction.type';
 
 @Injectable()
 export class TransactionsService {
-
     transactions: Array<Transaction>;
 
     constructor() {
@@ -13,8 +12,8 @@ export class TransactionsService {
                 amount: 500,
                 date: '02/21/2024',
                 category: Category.Grocery,
-                status: Status.Paid
-            }
+                status: Status.Paid,
+            },
         ];
     }
 
@@ -24,12 +23,12 @@ export class TransactionsService {
     }
 
     getTransactionById(id: string) {
-        const transaction = this.transactions.find(x => x.id === id);
+        const transaction = this.transactions.find((x) => x.id === id);
         if (transaction) {
             return transaction;
         }
 
-        throw new NotFoundException(`Transaction with id: ${id} not found.`)
+        throw new NotFoundException(`Transaction with id: ${id} not found.`);
     }
 
     createTransaction(transaction: Transaction) {
@@ -40,14 +39,16 @@ export class TransactionsService {
     }
 
     updateTransaction(updatedTransaction: Transaction) {
-        let transaction = this.getTransactionById(updatedTransaction.id);
+        const transaction = this.getTransactionById(updatedTransaction.id);
         Object.assign(transaction, updatedTransaction);
 
-        this.transactions = this.transactions.map(x => x.id === x.id ? transaction : x);
+        this.transactions = this.transactions.map((x) =>
+            x.id === x.id ? transaction : x,
+        );
         return transaction;
     }
 
     deleteTransaction(id: string) {
-        this.transactions = this.transactions.filter(x => x.id !== id);
+        this.transactions = this.transactions.filter((x) => x.id !== id);
     }
 }
