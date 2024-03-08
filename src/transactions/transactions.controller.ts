@@ -8,7 +8,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { Transaction } from './transaction.type';
+import { Transaction, TransactionToInsertOrUpdate } from './transaction.type';
 import { Response } from './../core/entities/response.type';
 
 @Controller('transactions')
@@ -16,42 +16,42 @@ export class TransactionsController {
   constructor(private transactionService: TransactionsService) { }
 
   @Get()
-  getTransactions() {
+  async getTransactions() {
     return new Response<Array<Transaction>>(
       'All transactions of this month',
-      this.transactionService.getAllTransactions(),
+      await this.transactionService.getAllTransactions(),
     );
   }
 
-  @Get()
-  getTransactionById(@Param() transactionId: string) {
+  @Get(':id')
+  async getTransactionById(@Param('id') id: number) {
     return new Response<Transaction>(
       'Transaction details',
-      this.transactionService.getTransactionById(transactionId),
+      await this.transactionService.getTransactionById(id),
     );
   }
 
   @Post()
-  createTransaction(@Body() transaction: Transaction) {
+  async createTransaction(@Body() transaction: TransactionToInsertOrUpdate) {
     return new Response<Transaction>(
-      'Create new transaction',
-      this.transactionService.createTransaction(transaction),
+      'New transaction created',
+      await this.transactionService.createTransaction(transaction),
     );
   }
 
-  @Put()
-  updateTransaction(@Body() transaction: Transaction) {
-    return new Response<Transaction>(
-      'Create new transaction',
-      this.transactionService.updateTransaction(transaction),
-    );
-  }
-
-  @Delete()
-  deleteTransaction(@Body() transactionId: string) {
+  @Put(':id')
+  async updateTransaction(@Body() transaction: TransactionToInsertOrUpdate, @Param('id') id: number) {
     return new Response<void>(
-      'Create new transaction',
-      this.transactionService.deleteTransaction(transactionId),
+      'Transaction updated',
+      await this.transactionService.updateTransaction(id, transaction),
+    );
+  }
+
+  @Delete(':id')
+  async deleteTransaction(@Param('id') id: number) {
+    return new Response<void>(
+      'Transaction deleted',
+      await this.transactionService.deleteTransaction(id),
     );
   }
 }

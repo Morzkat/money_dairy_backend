@@ -1,54 +1,62 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Transaction, Status, Category } from './transaction.type';
+import { Transaction, TransactionToInsertOrUpdate } from './transaction.type';
+import { TransactionsRepository } from 'src/core/db/unitOfWork/repositories/transactions.repository';
+import { StatusRepository } from 'src/core/db/unitOfWork/repositories/status.repositories';
+import { CategoriesRepository } from 'src/core/db/unitOfWork/repositories/categories.repository';
+import { WalletsRepository } from 'src/core/db/unitOfWork/repositories/wallets.repository';
+import { parseStringToFloat } from 'src/shared/utils/number.utils';
 
 @Injectable()
 export class TransactionsService {
     transactions: Array<Transaction>;
 
-    constructor() {
-        this.transactions = [
-            {
-                id: '',
-                amount: 500,
-                date: '02/21/2024',
-                category: Category.Grocery,
-                status: Status.Paid,
-            },
-        ];
+    constructor(private transactionRepository: TransactionsRepository, private walletRepository: WalletsRepository,
+        private categoriesRepository: CategoriesRepository, private statusRepository: StatusRepository) {
     }
 
     //TODO: this method should recieve a date range because we do not want to return all transaction history...
-    getAllTransactions() {
-        return this.transactions;
+    async getAllTransactions(): Promise<Transaction[]> {
+        return this.transactionRepository.getAll();
     }
 
-    getTransactionById(id: string) {
-        const transaction = this.transactions.find((x) => x.id === id);
-        if (transaction) {
-            return transaction;
-        }
+    async getTransactionById(id: number) {
+        if (!(await this.transactionRepository.exists(id)))
+            throw new NotFoundException(`Transaction with id: ${id} not found.`);
 
-        throw new NotFoundException(`Transaction with id: ${id} not found.`);
+        return this.transactionRepository.get(id);
     }
 
-    createTransaction(transaction: Transaction) {
-        transaction.id = new Date().toISOString();
-        this.transactions.push(transaction);
+    async createTransaction(transaction: TransactionToInsertOrUpdate) {
+        this.validateTransaction(transaction);
+        const wallet = await this.walletRepository.get(transaction.wallet);
+        wallet.amount = `${parseStringToFloat(wallet.amount) - parseStringToFloat(transaction.amount)}`;
 
-        return transaction;
+        await this.walletRepository.update(wallet.id, wallet);
+        return this.transactionRepository.create(transaction);
     }
 
-    updateTransaction(updatedTransaction: Transaction) {
-        const transaction = this.getTransactionById(updatedTransaction.id);
-        Object.assign(transaction, updatedTransaction);
+    async updateTransaction(transactionId: number, transactiontoUpdate: TransactionToInsertOrUpdate) {
 
-        this.transactions = this.transactions.map((x) =>
-            x.id === x.id ? transaction : x,
-        );
-        return transaction;
+        this.validateTransaction(transactiontoUpdate);
+
+        transactiontoUpdate.status = (await this.statusRepository.getStatusByName(transactiontoUpdate.status))?.id.toString();
+        transactiontoUpdate.category = (await this.categoriesRepository.getCategoryByName(transactiontoUpdate.category))?.id.toString();;
+
+        const currentTransaction = await this.transactionRepository.get(transactionId);
+        const wallet = await this.walletRepository.get(currentTransaction.wallet.id);
+        wallet.amount = `${parseStringToFloat(wallet.amount) + (parseStringToFloat(currentTransaction.amount) - parseStringToFloat(transactiontoUpdate.amount))}`;
+
+        await this.walletRepository.update(wallet.id, wallet);
+        await this.transactionRepository.update(transactionId, transactiontoUpdate);
     }
 
-    deleteTransaction(id: string) {
-        this.transactions = this.transactions.filter((x) => x.id !== id);
+    async deleteTransaction(id: number) {
+        //TODO: Update wallet balance
+        this.transactionRepository.delete(id);
+    }
+
+    private validateTransaction(transaction: Transaction | TransactionToInsertOrUpdate) {
+        if (parseStringToFloat(transaction.amount) < 0)
+            throw new Error('The wallet amount cannot be less than 0');
     }
 }

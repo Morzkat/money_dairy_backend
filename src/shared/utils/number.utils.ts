@@ -1,5 +1,5 @@
 export function parseStringToFloat(value: string) {
-    const num = parseFloat(value.split(',').join(''));
+    const num = parseFloat(value.toString().split(',').join(''));
 
     if (num === Number.NaN)
         throw new Error('Error formating number.');
